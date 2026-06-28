@@ -17,6 +17,29 @@ Install it by tag so the consuming project controls the exact version.
 
 The deployer helper expects proxy contracts such as `ProxyAdmin`, `TransparentUpgradeableProxy`, and `ERC1967Proxy` to be available in the consuming project's compiled contract registry. They are not shipped by this package. That keeps deployment resolution tied to the user's own registry and contract set.
 
+You can register any contract under those names, but just to get started
+add this to your package.json
+```
+{"devDependencies": {
+    "@openzeppelin/contracts": "4.9.3",
+    "@openzeppelin/contracts-ethereum-package": "3.0.0",
+    "@openzeppelin/upgrades": "2.8.0",
+}};
+```
+
+And this to your hardhat.config.ts
+```
+export default defineConfig({
+  solidity: {
+    npmFilesToBuild: [
+      "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol",
+      "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol",
+      "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol",
+    ],
+  },
+});
+```
+
 ## Development
 
 Run tests with:

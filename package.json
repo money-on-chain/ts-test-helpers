@@ -10,7 +10,9 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./package.json": "./package.json",
+    "./hardhat.config.ts": "./hardhat.config.ts"
   },
   "files": [
     "dist",
@@ -19,13 +21,15 @@
   "scripts": {
     "clean": "hardhat clean && rm -rf dist artifacts cache",
     "compile": "hardhat compile",
-    "build": "pnpm exec tsc -p tsconfig.build.json",
-    "check": "pnpm exec tsc --noEmit",
+    "build": "pnpm exec tsc -p tsconfig.json",
+    "check": "pnpm exec tsc --noEmit -p tsconfig.json",
     "prepare": "pnpm build",
     "test": "pnpm clean && pnpm compile && pnpm check && node --import tsx/esm --test \"test/**/*.test.ts\""
   },
   "dependencies": {
-    "viem": "2.53.1"
+    "viem": "2.53.1",
+    "hardhat": "3.9.0",
+    "@nomicfoundation/hardhat-toolbox-viem": "5.0.7"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox-viem": "5.0.7",
@@ -33,7 +37,6 @@
     "@openzeppelin/contracts-ethereum-package": "3.0.0",
     "@openzeppelin/upgrades": "2.8.0",
     "@types/node": "^26.0.1",
-    "hardhat": "3.9.0",
     "solc": "0.6.12",
     "tsx": "^4.22.4",
     "typechain": "^8.3.2",

@@ -11,6 +11,11 @@ export default defineConfig({
         runs: 200,
       },
     },
+    npmFilesToBuild: [
+      "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol",
+      "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol",
+      "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol",
+    ],
   },
   paths: {
     sources: "test/contracts",

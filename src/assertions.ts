@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { Address, getAddress } from "viem";
 
 export function bigintCloseTo(
   actual: bigint,
@@ -22,5 +23,17 @@ export function assertCloseTo(
     diff <= tolerance,
     message ??
       `expected ${actual} to be within ${tolerance} of ${expected}; diff=${diff}`,
+  );
+}
+
+export function assertSameAddress(
+  actual: Address | string,
+  expected: Address | string,
+  message?: string,
+): void {
+  assert.equal(
+    getAddress(actual),
+    getAddress(expected),
+    message ?? `expected ${actual} but was ${expected}`,
   );
 }

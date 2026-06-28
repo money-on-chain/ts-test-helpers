@@ -6,7 +6,6 @@ Always uses the same deployer address.
 Usage:
 
 import { network } from "hardhat";
-import { governedERC20Abi } from "./abi/GovernedERC20.js";
 
 const { viem } = await network.connect();
 
@@ -14,92 +13,90 @@ const deployer = await Deployer.default(viem);
 // or:
 const deployer = await Deployer.withSigner(viem, 1);
 
-const direct = await deployer.deploy("GovernedERC20", [
+const direct = await deployer.deploy("ERC20", [
   "Token",
   "TKN",
 ]);
 
 const proxied = await deployer.deployProxy(
-  "GovernedERC20",
-  governedERC20Abi,
+  "ERC20",
   "initialize",
   [... initializer args ...],
 );
 */
 
+import { artifacts } from "hardhat";
 import type {
-  Abi,
+  ArtifactMap,
+  StringWithArtifactContractNamesAutocompletion,
+} from "hardhat/types/artifacts";
+import type {
   Address,
+  ContractConstructorArgs,
   ContractFunctionArgs,
   ContractFunctionName,
+  GetContractReturnType,
 } from "viem";
 import { encodeFunctionData, getAddress } from "viem";
+import type {
+  Viem,
+  DeployClient,
+  PublicClient,
+  WalletClient,
+} from "./types.js";
 
-type AnyFunc = (...args: any[]) => any;
+export type DeployArgs = Parameters<Viem["deployContract"]>;
 
-type HardhatViemLike = {
-  getPublicClient: AnyFunc;
-  getWalletClients: AnyFunc;
-  deployContract: AnyFunc;
-  getContractAt: AnyFunc;
-};
+export type ConstructorArgs<ContractName> =
+  ContractName extends keyof ArtifactMap
+    ? ContractConstructorArgs<ContractAbi<ContractName>>
+    : unknown[];
 
-type PublicClientOf<V extends HardhatViemLike> = Awaited<
-  ReturnType<V["getPublicClient"]>
->;
+type DeployContractConfig = NonNullable<Parameters<Viem["deployContract"]>[2]>;
 
-type WalletClientOf<V extends HardhatViemLike> = Awaited<
-  ReturnType<V["getWalletClients"]>
->[number];
+export type DeployReturn<
+  ContractName extends
+    StringWithArtifactContractNamesAutocompletion = StringWithArtifactContractNamesAutocompletion,
+> = GetContractReturnType<ContractAbi<ContractName>, DeployClient, Address>;
 
-type DeployArgs<V extends HardhatViemLike> = Parameters<V["deployContract"]>;
+type ContractAbi<ContractName> = ContractName extends keyof ArtifactMap
+  ? ArtifactMap[ContractName]["abi"]
+  : readonly unknown[];
 
-type DeployReturn<V extends HardhatViemLike> = Awaited<
-  ReturnType<V["deployContract"]>
->;
-
-type GetContractAtReturn<V extends HardhatViemLike> = Awaited<
-  ReturnType<V["getContractAt"]>
->;
-
-type InitializerName<TAbi extends Abi> = ContractFunctionName<
-  TAbi,
+type InitializerName<ContractName> = ContractFunctionName<
+  ContractAbi<ContractName>,
   "nonpayable" | "payable"
 >;
 
 type InitializerArgs<
-  TAbi extends Abi,
-  TInitializer extends InitializerName<TAbi>,
-> = ContractFunctionArgs<TAbi, "nonpayable" | "payable", TInitializer>;
+  ContractName,
+  TInitializer extends InitializerName<ContractName>,
+> = ContractFunctionArgs<
+  ContractAbi<ContractName>,
+  "nonpayable" | "payable",
+  TInitializer
+>;
 
-export class Deployer<V extends HardhatViemLike> {
+type DefaultInitializerName<ContractName> = Extract<
+  InitializerName<ContractName>,
+  "initialize"
+>;
+
+export class Deployer {
   private readonly implCache = new Map<string, Promise<Address>>();
 
   private constructor(
-    public readonly viem: V,
-    public readonly publicClient: PublicClientOf<V>,
-    public readonly walletClient: WalletClientOf<V>,
-    public readonly proxyAdmin: DeployReturn<V>,
+    public readonly viem: Viem,
+    public readonly publicClient: PublicClient,
+    public readonly walletClient: WalletClient,
+    public readonly proxyAdmin: DeployReturn<"ProxyAdmin">,
   ) {}
 
-  /**
-   * Build a default deployer using wallet index 0.
-   */
-  static async default<V extends HardhatViemLike>(
-    viem: V,
-  ): Promise<Deployer<V>> {
+  static async default<V extends Viem>(viem: V): Promise<Deployer> {
     return this.withSigner(viem, 0);
   }
 
-  /**
-   * Build a deployer using the wallet at `walletIndex`.
-   *
-   * Every deployment performed through this Deployer uses that wallet.
-   */
-  static async withSigner<V extends HardhatViemLike>(
-    viem: V,
-    walletIndex = 0,
-  ): Promise<Deployer<V>> {
+  static async withSigner(viem: Viem, walletIndex = 0): Promise<Deployer> {
     const publicClient = await viem.getPublicClient();
     const walletClients = await viem.getWalletClients();
     const walletClient = walletClients[walletIndex];
@@ -125,53 +122,40 @@ export class Deployer<V extends HardhatViemLike> {
     return new Deployer(viem, publicClient, walletClient, proxyAdmin);
   }
 
-  /**
-   * Typed deploy wrapper.
-   *
-   * Callers get the same argument checking as viem.deployContract.
-   */
-  async deploy(...args: DeployArgs<V>): Promise<DeployReturn<V>> {
-    const rawArgs = args as unknown as [
-      string,
-      unknown[] | undefined,
-      Record<string, unknown> | undefined,
-    ];
-
-    const contractName = rawArgs[0];
-    const constructorArgs = rawArgs[1] ?? [];
-    const config = rawArgs[2] ?? {};
-
+  async deploy<
+    ContractName extends StringWithArtifactContractNamesAutocompletion,
+  >(
+    contractName: ContractName,
+    constructorArgs?: ConstructorArgs<ContractName>,
+    config?: DeployContractConfig,
+  ): Promise<DeployReturn<ContractName>> {
     return Deployer.deployInternal(
       this.viem,
       this.publicClient,
       this.walletClient,
       contractName,
-      constructorArgs,
-      config,
-    );
+      constructorArgs ?? ([] as ConstructorArgs<ContractName>),
+      config ?? {},
+    ) as unknown as Promise<DeployReturn<ContractName>>;
   }
 
-  /**
-   * Deploys a TransparentUpgradeableProxy.
-   *
-   * The initializer name and args are checked against the ABI passed in.
-   */
   async deployProxy<
-    const TAbi extends Abi,
-    const TInitializer extends InitializerName<TAbi>,
+    ContractName extends StringWithArtifactContractNamesAutocompletion,
   >(
-    contractName: string,
-    abi: TAbi,
-    initializer: TInitializer,
-    initArgs: InitializerArgs<TAbi, TInitializer>,
-  ): Promise<GetContractAtReturn<V>> {
+    contractName: ContractName,
+    initArgs: InitializerArgs<
+      ContractName,
+      DefaultInitializerName<ContractName>
+    >,
+  ): Promise<DeployReturn<ContractName>> {
     const logicAddress = await this.getOrDeployImpl(contractName);
+    const artifact = await artifacts.readArtifact(contractName);
 
     const initData = encodeFunctionData({
-      abi,
-      functionName: initializer,
+      abi: artifact.abi,
+      functionName: "initialize",
       args: initArgs,
-    } as any);
+    } as never);
 
     const proxy = await this.deployByName("TransparentUpgradeableProxy", [
       logicAddress,
@@ -182,27 +166,23 @@ export class Deployer<V extends HardhatViemLike> {
     return this.getContractAt(contractName, proxy.address);
   }
 
-  /**
-   * Deploys an ERC1967Proxy / UUPS proxy.
-   *
-   * The initializer name and args are checked against the ABI passed in.
-   */
   async deployUUPSProxy<
-    const TAbi extends Abi,
-    const TInitializer extends InitializerName<TAbi>,
+    ContractName extends StringWithArtifactContractNamesAutocompletion,
   >(
-    contractName: string,
-    abi: TAbi,
-    initializer: TInitializer,
-    initArgs: InitializerArgs<TAbi, TInitializer>,
-  ): Promise<GetContractAtReturn<V>> {
+    contractName: ContractName,
+    initArgs: InitializerArgs<
+      ContractName,
+      DefaultInitializerName<ContractName>
+    >,
+  ): Promise<DeployReturn<ContractName>> {
     const logicAddress = await this.getOrDeployImpl(contractName);
+    const artifact = await artifacts.readArtifact(contractName);
 
     const initData = encodeFunctionData({
-      abi,
-      functionName: initializer,
+      abi: artifact.abi,
+      functionName: "initialize",
       args: initArgs,
-    } as any);
+    } as never);
 
     const proxy = await this.deployByName("ERC1967Proxy", [
       logicAddress,
@@ -213,9 +193,7 @@ export class Deployer<V extends HardhatViemLike> {
   }
 
   private async getOrDeployImpl(contractName: string): Promise<Address> {
-    const key = contractName;
-
-    let deployment = this.implCache.get(key);
+    let deployment = this.implCache.get(contractName);
 
     if (deployment === undefined) {
       deployment = (async () => {
@@ -223,17 +201,19 @@ export class Deployer<V extends HardhatViemLike> {
         return getAddress(implementation.address);
       })();
 
-      this.implCache.set(key, deployment);
+      this.implCache.set(contractName, deployment);
     }
 
     return deployment;
   }
 
-  private async deployByName(
-    contractName: string,
-    constructorArgs: readonly unknown[] = [],
-    config: Record<string, unknown> = {},
-  ): Promise<DeployReturn<V>> {
+  private async deployByName<
+    ContractName extends StringWithArtifactContractNamesAutocompletion,
+  >(
+    contractName: ContractName,
+    constructorArgs: ConstructorArgs<ContractName> = [] as ConstructorArgs<ContractName>,
+    config: DeployContractConfig = {},
+  ): Promise<DeployReturn<ContractName>> {
     return Deployer.deployInternal(
       this.viem,
       this.publicClient,
@@ -244,33 +224,37 @@ export class Deployer<V extends HardhatViemLike> {
     );
   }
 
-  private async getContractAt(
-    contractName: string,
+  private async getContractAt<
+    ContractName extends StringWithArtifactContractNamesAutocompletion,
+  >(
+    contractName: ContractName,
     address: Address,
-  ): Promise<GetContractAtReturn<V>> {
+  ): Promise<DeployReturn<ContractName>> {
     return this.viem.getContractAt(contractName, address, {
       client: {
         public: this.publicClient,
         wallet: this.walletClient,
       },
-    });
+    }) as Promise<DeployReturn<ContractName>>;
   }
 
-  private static async deployInternal<V extends HardhatViemLike>(
-    viem: V,
-    publicClient: PublicClientOf<V>,
-    walletClient: WalletClientOf<V>,
-    contractName: string,
-    constructorArgs: readonly unknown[] = [],
-    config: Record<string, unknown> = {},
-  ): Promise<DeployReturn<V>> {
+  private static async deployInternal<
+    ContractName extends StringWithArtifactContractNamesAutocompletion,
+  >(
+    viem: Viem,
+    publicClient: PublicClient,
+    walletClient: WalletClient,
+    contractName: ContractName,
+    constructorArgs: ConstructorArgs<ContractName> = [] as ConstructorArgs<ContractName>,
+    config: DeployContractConfig = {},
+  ): Promise<DeployReturn<ContractName>> {
     return viem.deployContract(contractName, constructorArgs, {
       ...config,
       client: {
-        ...((config.client as Record<string, unknown> | undefined) ?? {}),
+        ...(config.client ?? {}),
         public: publicClient,
         wallet: walletClient,
       },
-    });
+    }) as unknown as Promise<DeployReturn<ContractName>>;
   }
 }

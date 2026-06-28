@@ -12,7 +12,7 @@ const IMPLEMENTATION_SLOT =
 const ZERO_ADDRESS = getAddress("0x0000000000000000000000000000000000000000");
 
 type MinimalPublicClient = {
-  getBytecode(args: { address: Address }): Promise<Hex | undefined>;
+  getCode(args: { address: Address }): Promise<Hex | undefined>;
   getStorageAt(args: { address: Address; slot: Hex }): Promise<Hex | undefined>;
 };
 
@@ -33,14 +33,17 @@ describe("Deployer", async () => {
       getAddress(deployer.proxyAdmin.address),
     );
     assert.notEqual(
-      await publicClient.getBytecode({ address: deployer.proxyAdmin.address }),
+      await publicClient.getCode({ address: deployer.proxyAdmin.address }),
       undefined,
     );
   });
 
   it("uses the selected wallet for direct deployment", async () => {
     const deployer = await Deployer.withSigner(viem, 1);
-    const contract = await deployer.deploy("DummyDirectDeployment", ["constructor", 7n]);
+    const contract = await deployer.deploy("DummyDirectDeployment", [
+      "constructor",
+      7n,
+    ]);
 
     assert.equal(await contract.read.name(), "constructor");
     assert.equal(await contract.read.amount(), 7n);
@@ -57,18 +60,16 @@ describe("Deployer", async () => {
   it("deploys transparent proxies and reuses the same implementation", async () => {
     const deployer = await Deployer.default(viem);
 
-    const first = await deployer.deployProxy(
-      "DummyProxyImplementation",
-      proxyImplementationAbi,
-      "initialize",
-      ["proxy one", 11n, walletClients[0].account.address],
-    );
-    const second = await deployer.deployProxy(
-      "DummyProxyImplementation",
-      proxyImplementationAbi,
-      "initialize",
-      ["proxy two", 22n, walletClients[1].account.address],
-    );
+    const first = await deployer.deployProxy("DummyProxyImplementation", [
+      "proxy one",
+      11n,
+      walletClients[0].account.address,
+    ]);
+    const second = await deployer.deployProxy("DummyProxyImplementation", [
+      "proxy two",
+      22n,
+      walletClients[1].account.address,
+    ]);
 
     assert.equal(await first.read.name(), "proxy one");
     assert.equal(await first.read.amount(), 11n);
@@ -93,12 +94,11 @@ describe("Deployer", async () => {
   it("deploys ERC1967 proxies and initializes state", async () => {
     const deployer = await Deployer.default(viem);
 
-    const proxy = await deployer.deployUUPSProxy(
-      "DummyProxyImplementation",
-      proxyImplementationAbi,
-      "initialize",
-      ["uups", 33n, walletClients[0].account.address],
-    );
+    const proxy = await deployer.deployUUPSProxy("DummyProxyImplementation", [
+      "uups",
+      33n,
+      walletClients[0].account.address,
+    ]);
 
     assert.equal(await proxy.read.name(), "uups");
     assert.equal(await proxy.read.amount(), 33n);
@@ -130,16 +130,3 @@ async function implementationAddress(
   return getAddress(sliceHex(raw, 12));
 }
 
-const proxyImplementationAbi = [
-  {
-    type: "function",
-    name: "initialize",
-    stateMutability: "nonpayable",
-    inputs: [
-      { name: "initialName", type: "string" },
-      { name: "initialAmount", type: "uint256" },
-      { name: "initialOwner", type: "address" },
-    ],
-    outputs: [],
-  },
-] as const;

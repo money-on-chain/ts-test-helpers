@@ -6,7 +6,6 @@ Always uses the same deployer address.
 Usage:
 
 import { network } from "hardhat";
-import { governedERC20Abi } from "./abi/GovernedERC20.js";
 
 const { viem } = await network.connect();
 
@@ -14,18 +13,18 @@ const deployer = await Deployer.default(viem);
 // or:
 const deployer = await Deployer.withSigner(viem, 1);
 
-const direct = await deployer.deploy("GovernedERC20", [
+const direct = await deployer.deploy("ERC20", [
   "Token",
   "TKN",
 ]);
 
 const proxied = await deployer.deployProxy(
-  "GovernedERC20",
-  governedERC20Abi,
+  "ERC20",
   "initialize",
   [... initializer args ...],
 );
 */
+import { artifacts } from "hardhat";
 import { encodeFunctionData, getAddress } from "viem";
 export class Deployer {
     viem;
@@ -39,17 +38,9 @@ export class Deployer {
         this.walletClient = walletClient;
         this.proxyAdmin = proxyAdmin;
     }
-    /**
-     * Build a default deployer using wallet index 0.
-     */
     static async default(viem) {
         return this.withSigner(viem, 0);
     }
-    /**
-     * Build a deployer using the wallet at `walletIndex`.
-     *
-     * Every deployment performed through this Deployer uses that wallet.
-     */
     static async withSigner(viem, walletIndex = 0) {
         const publicClient = await viem.getPublicClient();
         const walletClients = await viem.getWalletClients();
@@ -63,28 +54,15 @@ export class Deployer {
         const proxyAdmin = await Deployer.deployInternal(viem, publicClient, walletClient, "ProxyAdmin", []);
         return new Deployer(viem, publicClient, walletClient, proxyAdmin);
     }
-    /**
-     * Typed deploy wrapper.
-     *
-     * Callers get the same argument checking as viem.deployContract.
-     */
-    async deploy(...args) {
-        const rawArgs = args;
-        const contractName = rawArgs[0];
-        const constructorArgs = rawArgs[1] ?? [];
-        const config = rawArgs[2] ?? {};
-        return Deployer.deployInternal(this.viem, this.publicClient, this.walletClient, contractName, constructorArgs, config);
+    async deploy(contractName, constructorArgs, config) {
+        return Deployer.deployInternal(this.viem, this.publicClient, this.walletClient, contractName, constructorArgs ?? [], config ?? {});
     }
-    /**
-     * Deploys a TransparentUpgradeableProxy.
-     *
-     * The initializer name and args are checked against the ABI passed in.
-     */
-    async deployProxy(contractName, abi, initializer, initArgs) {
+    async deployProxy(contractName, initArgs) {
         const logicAddress = await this.getOrDeployImpl(contractName);
+        const artifact = await artifacts.readArtifact(contractName);
         const initData = encodeFunctionData({
-            abi,
-            functionName: initializer,
+            abi: artifact.abi,
+            functionName: "initialize",
             args: initArgs,
         });
         const proxy = await this.deployByName("TransparentUpgradeableProxy", [
@@ -94,16 +72,12 @@ export class Deployer {
         ]);
         return this.getContractAt(contractName, proxy.address);
     }
-    /**
-     * Deploys an ERC1967Proxy / UUPS proxy.
-     *
-     * The initializer name and args are checked against the ABI passed in.
-     */
-    async deployUUPSProxy(contractName, abi, initializer, initArgs) {
+    async deployUUPSProxy(contractName, initArgs) {
         const logicAddress = await this.getOrDeployImpl(contractName);
+        const artifact = await artifacts.readArtifact(contractName);
         const initData = encodeFunctionData({
-            abi,
-            functionName: initializer,
+            abi: artifact.abi,
+            functionName: "initialize",
             args: initArgs,
         });
         const proxy = await this.deployByName("ERC1967Proxy", [
@@ -113,14 +87,13 @@ export class Deployer {
         return this.getContractAt(contractName, proxy.address);
     }
     async getOrDeployImpl(contractName) {
-        const key = contractName;
-        let deployment = this.implCache.get(key);
+        let deployment = this.implCache.get(contractName);
         if (deployment === undefined) {
             deployment = (async () => {
                 const implementation = await this.deployByName(contractName, []);
                 return getAddress(implementation.address);
             })();
-            this.implCache.set(key, deployment);
+            this.implCache.set(contractName, deployment);
         }
         return deployment;
     }
