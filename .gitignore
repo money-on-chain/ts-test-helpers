@@ -1,0 +1,6 @@
+artifacts
+cache
+src/typechain
+soljson-latest.js
+node_modules
+.log
