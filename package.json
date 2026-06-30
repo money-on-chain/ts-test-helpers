@@ -1,45 +1,67 @@
 {
-  "name": "ts-test-helpers",
-  "version": "0.1.0",
-  "private": true,
-  "description": "Internal test helper package for Money On Chain repos",
-  "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+    "name": "ts-test-helpers",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Internal test helper package for Money On Chain repos",
+    "type": "module",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        },
+        "./package.json": "./package.json",
+        "./hardhat.config.ts": "./hardhat.config.ts"
     },
-    "./package.json": "./package.json",
-    "./hardhat.config.ts": "./hardhat.config.ts"
-  },
-  "files": [
-    "dist",
-    "README.md"
-  ],
-  "scripts": {
-    "clean": "hardhat clean && rm -rf dist artifacts cache",
-    "compile": "hardhat compile",
-    "build": "pnpm exec tsc -p tsconfig.json",
-    "check": "pnpm exec tsc --noEmit -p tsconfig.json",
-    "prepare": "pnpm build",
-    "test": "pnpm clean && pnpm compile && pnpm check && node --import tsx/esm --test \"test/**/*.test.ts\""
-  },
-  "dependencies": {
-    "viem": "2.53.1",
-    "hardhat": "3.9.0",
-    "@nomicfoundation/hardhat-toolbox-viem": "5.0.7"
-  },
-  "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox-viem": "5.0.7",
-    "@openzeppelin/contracts": "4.9.3",
-    "@openzeppelin/contracts-ethereum-package": "3.0.0",
-    "@openzeppelin/upgrades": "2.8.0",
-    "@types/node": "^26.0.1",
-    "solc": "0.6.12",
-    "tsx": "^4.22.4",
-    "typechain": "^8.3.2",
-    "typescript": "6.0.3"
-  }
+    "files": [
+        "dist",
+        "README.md"
+    ],
+    "scripts": {
+        "clean": "hardhat clean && rm -rf dist artifacts cache",
+        "compile": "hardhat compile",
+        "build": "pnpm exec tsc -p tsconfig.json",
+        "check": "pnpm exec tsc --noEmit -p tsconfig.json",
+        "format": "pnpm exec prettier . --write",
+        "format:check": "pnpm exec prettier . --check",
+        "lint": "pnpm exec eslint . --max-warnings 0",
+        "lint:fix": "pnpm exec eslint . --fix --max-warnings 0",
+        "quality": "pnpm format:check && pnpm lint && pnpm check",
+        "precommit": "lint-staged && pnpm check",
+        "prepare": "husky",
+        "test": "pnpm clean && pnpm compile && pnpm check && node --import tsx/esm --test \"test/**/*.test.ts\""
+    },
+    "lint-staged": {
+        "*.{ts,tsx,js,json,md,yml,yaml}": [
+            "prettier --write"
+        ],
+        "*.{ts,tsx,js}": [
+            "eslint --fix --max-warnings 0 --no-warn-ignored --ignore-pattern eslint.config.js --ignore-pattern hardhat.config.js --ignore-pattern hardhat.config.ts"
+        ]
+    },
+    "dependencies": {
+        "viem": "2.53.1",
+        "hardhat": "3.9.0",
+        "@nomicfoundation/hardhat-toolbox-viem": "5.0.7"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.0.0",
+        "@openzeppelin/contracts": "4.9.3",
+        "@openzeppelin/contracts-ethereum-package": "3.0.0",
+        "@openzeppelin/upgrades": "2.8.0",
+        "@types/node": "^26.0.1",
+        "eslint": "^9.0.0",
+        "eslint-config-prettier": "^10.0.0",
+        "globals": "^16.0.0",
+        "hardhat": "3.9.0",
+        "husky": "^9.0.0",
+        "lint-staged": "^16.0.0",
+        "prettier": "^3.0.0",
+        "solc": "0.6.12",
+        "tsx": "^4.22.4",
+        "typechain": "^8.3.2",
+        "typescript": "6.0.3",
+        "typescript-eslint": "^8.0.0"
+    }
 }

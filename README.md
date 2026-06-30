@@ -9,9 +9,9 @@ Install it by tag so the consuming project controls the exact version.
 
 ```json
 {
-  "dependencies": {
-    "ts-test-helpers": "github:money-on-chain/ts-test-helpers#<tag>"
-  }
+    "dependencies": {
+        "ts-test-helpers": "github:money-on-chain/ts-test-helpers#<tag>"
+    }
 }
 ```
 
@@ -19,6 +19,7 @@ The deployer helper expects proxy contracts such as `ProxyAdmin`, `TransparentUp
 
 You can register any contract under those names, but just to get started
 add this to your package.json
+
 ```
 {"devDependencies": {
     "@openzeppelin/contracts": "4.9.3",
@@ -28,6 +29,7 @@ add this to your package.json
 ```
 
 And this to your hardhat.config.ts
+
 ```
 export default defineConfig({
   solidity: {

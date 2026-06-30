@@ -20,7 +20,10 @@ export declare class Deployer {
     static withSigner(viem: Viem, walletIndex?: number): Promise<Deployer>;
     deploy<ContractName extends StringWithArtifactContractNamesAutocompletion>(contractName: ContractName, constructorArgs?: ConstructorArgs<ContractName>, config?: DeployContractConfig): Promise<DeployReturn<ContractName>>;
     deployProxy<ContractName extends StringWithArtifactContractNamesAutocompletion>(contractName: ContractName, initArgs: InitializerArgs<ContractName, DefaultInitializerName<ContractName>>): Promise<DeployReturn<ContractName>>;
+    deployUninitializedProxy<ContractName extends StringWithArtifactContractNamesAutocompletion>(contractName: ContractName): Promise<DeployReturn<ContractName>>;
     deployUUPSProxy<ContractName extends StringWithArtifactContractNamesAutocompletion>(contractName: ContractName, initArgs: InitializerArgs<ContractName, DefaultInitializerName<ContractName>>): Promise<DeployReturn<ContractName>>;
+    deployUninitializedUUPSProxy<ContractName extends StringWithArtifactContractNamesAutocompletion>(contractName: ContractName): Promise<DeployReturn<ContractName>>;
+    private deployInitializedProxy;
     private getOrDeployImpl;
     private deployByName;
     private getContractAt;

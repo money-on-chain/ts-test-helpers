@@ -1,9 +1,8 @@
-import type { Hex } from "viem";
-import { bytesToHex } from "viem";
-import { mnemonicToAccount } from "viem/accounts";
+import type { Hex } from 'viem';
+import { bytesToHex } from 'viem';
+import { mnemonicToAccount } from 'viem/accounts';
 
-export const seedPhrase =
-  "test test test test test test test test test test test junk";
+export const seedPhrase = 'test test test test test test test test test test test junk';
 
 export const BACKGROUND_SERVICE_ACCOUNT_INDEX = 1;
 
@@ -16,27 +15,27 @@ export const BACKGROUND_SERVICE_ACCOUNT_INDEX = 1;
  * ...
  */
 export function privateKeys(): Hex[] {
-  return Array.from({ length: 20 }, (_, i) => {
-    const account = mnemonicToAccount(seedPhrase, {
-      path: `m/44'/60'/0'/0/${i}`,
+    return Array.from({ length: 20 }, (_, i) => {
+        const account = mnemonicToAccount(seedPhrase, {
+            path: `m/44'/60'/0'/0/${i}`,
+        });
+
+        const privateKey = account.getHdKey().privateKey;
+
+        if (privateKey === null) {
+            throw new Error(`Could not derive private key at index ${i}`);
+        }
+
+        return bytesToHex(privateKey);
     });
-
-    const privateKey = account.getHdKey().privateKey;
-
-    if (privateKey === null) {
-      throw new Error(`Could not derive private key at index ${i}`);
-    }
-
-    return bytesToHex(privateKey);
-  });
 }
 
 export function privateKeyAt(index: number): Hex {
-  const key = privateKeys()[index];
+    const key = privateKeys()[index];
 
-  if (key === undefined) {
-    throw new Error(`No private key at index ${index}`);
-  }
+    if (key === undefined) {
+        throw new Error(`No private key at index ${index}`);
+    }
 
-  return key;
+    return key;
 }

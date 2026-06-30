@@ -58,32 +58,31 @@ export class Deployer {
         return Deployer.deployInternal(this.viem, this.publicClient, this.walletClient, contractName, constructorArgs ?? [], config ?? {});
     }
     async deployProxy(contractName, initArgs) {
-        const logicAddress = await this.getOrDeployImpl(contractName);
-        const artifact = await artifacts.readArtifact(contractName);
-        const initData = encodeFunctionData({
-            abi: artifact.abi,
-            functionName: "initialize",
-            args: initArgs,
-        });
-        const proxy = await this.deployByName("TransparentUpgradeableProxy", [
-            logicAddress,
-            this.proxyAdmin.address,
-            initData,
-        ]);
-        return this.getContractAt(contractName, proxy.address);
+        return this.deployInitializedProxy(contractName, "TransparentUpgradeableProxy", initArgs);
+    }
+    async deployUninitializedProxy(contractName) {
+        return this.deployInitializedProxy(contractName, "TransparentUpgradeableProxy");
     }
     async deployUUPSProxy(contractName, initArgs) {
+        return this.deployInitializedProxy(contractName, "ERC1967Proxy", initArgs);
+    }
+    async deployUninitializedUUPSProxy(contractName) {
+        return this.deployInitializedProxy(contractName, "ERC1967Proxy");
+    }
+    async deployInitializedProxy(contractName, proxyName, initArgs) {
         const logicAddress = await this.getOrDeployImpl(contractName);
         const artifact = await artifacts.readArtifact(contractName);
-        const initData = encodeFunctionData({
-            abi: artifact.abi,
-            functionName: "initialize",
-            args: initArgs,
-        });
-        const proxy = await this.deployByName("ERC1967Proxy", [
-            logicAddress,
-            initData,
-        ]);
+        const initData = initArgs === undefined
+            ? "0x"
+            : encodeFunctionData({
+                abi: artifact.abi,
+                functionName: "initialize",
+                args: initArgs,
+            });
+        const proxyArgs = proxyName === "TransparentUpgradeableProxy"
+            ? [logicAddress, this.proxyAdmin.address, initData]
+            : [logicAddress, initData];
+        const proxy = await this.deployByName(proxyName, proxyArgs);
         return this.getContractAt(contractName, proxy.address);
     }
     async getOrDeployImpl(contractName) {
