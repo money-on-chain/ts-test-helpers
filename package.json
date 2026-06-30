@@ -16,7 +16,12 @@
     },
     "files": [
         "dist",
-        "README.md"
+        "README.md",
+        "hardhat.config.ts",
+        "hardhat.config.js",
+        "hardhat.config.d.ts",
+        "hardhat.config.js.map",
+        "hardhat.config.d.ts.map"
     ],
     "scripts": {
         "clean": "hardhat clean && rm -rf dist artifacts cache",
