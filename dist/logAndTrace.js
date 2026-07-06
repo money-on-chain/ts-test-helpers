@@ -1,8 +1,8 @@
 export async function subSection(prefix, func) {
     const log = (...args) => console.log(`[${prefix}]`, ...args);
-    log("Starting");
+    log('Starting');
     const result = await func(log);
-    log("Done");
+    log('Done');
     return result;
 }
 //# sourceMappingURL=logAndTrace.js.map

@@ -1,4 +1,4 @@
-import type { Hex } from "viem";
+import type { Hex } from 'viem';
 export declare const seedPhrase = "test test test test test test test test test test test junk";
 export declare const BACKGROUND_SERVICE_ACCOUNT_INDEX = 1;
 /**

@@ -1,2 +1,2 @@
-import "@nomicfoundation/hardhat-toolbox-viem";
+import '@nomicfoundation/hardhat-toolbox-viem';
 //# sourceMappingURL=types.js.map

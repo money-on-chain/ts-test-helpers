@@ -24,8 +24,8 @@ const proxied = await deployer.deployProxy(
   [... initializer args ...],
 );
 */
-import { artifacts } from "hardhat";
-import { encodeFunctionData, getAddress } from "viem";
+import { artifacts } from 'hardhat';
+import { encodeFunctionData, getAddress } from 'viem';
 export class Deployer {
     viem;
     publicClient;
@@ -51,35 +51,35 @@ export class Deployer {
         if (walletClient.account === undefined) {
             throw new Error(`Viem wallet client at index ${walletIndex} has no account`);
         }
-        const proxyAdmin = await Deployer.deployInternal(viem, publicClient, walletClient, "ProxyAdmin", []);
+        const proxyAdmin = await Deployer.deployInternal(viem, publicClient, walletClient, 'ProxyAdmin', []);
         return new Deployer(viem, publicClient, walletClient, proxyAdmin);
     }
     async deploy(contractName, constructorArgs, config) {
         return Deployer.deployInternal(this.viem, this.publicClient, this.walletClient, contractName, constructorArgs ?? [], config ?? {});
     }
     async deployProxy(contractName, initArgs) {
-        return this.deployInitializedProxy(contractName, "TransparentUpgradeableProxy", initArgs);
+        return this.deployInitializedProxy(contractName, 'TransparentUpgradeableProxy', initArgs);
     }
     async deployUninitializedProxy(contractName) {
-        return this.deployInitializedProxy(contractName, "TransparentUpgradeableProxy");
+        return this.deployInitializedProxy(contractName, 'TransparentUpgradeableProxy');
     }
     async deployUUPSProxy(contractName, initArgs) {
-        return this.deployInitializedProxy(contractName, "ERC1967Proxy", initArgs);
+        return this.deployInitializedProxy(contractName, 'ERC1967Proxy', initArgs);
     }
     async deployUninitializedUUPSProxy(contractName) {
-        return this.deployInitializedProxy(contractName, "ERC1967Proxy");
+        return this.deployInitializedProxy(contractName, 'ERC1967Proxy');
     }
     async deployInitializedProxy(contractName, proxyName, initArgs) {
         const logicAddress = await this.getOrDeployImpl(contractName);
         const artifact = await artifacts.readArtifact(contractName);
         const initData = initArgs === undefined
-            ? "0x"
+            ? '0x'
             : encodeFunctionData({
                 abi: artifact.abi,
-                functionName: "initialize",
+                functionName: 'initialize',
                 args: initArgs,
             });
-        const proxyArgs = proxyName === "TransparentUpgradeableProxy"
+        const proxyArgs = proxyName === 'TransparentUpgradeableProxy'
             ? [logicAddress, this.proxyAdmin.address, initData]
             : [logicAddress, initData];
         const proxy = await this.deployByName(proxyName, proxyArgs);

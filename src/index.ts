@@ -7,6 +7,7 @@ export * from './privateKeys.js';
 export * from './waiter.js';
 export * from './types.js';
 export * from './registry.js';
+export * from './events.js';
 
 import { Address } from 'viem';
 

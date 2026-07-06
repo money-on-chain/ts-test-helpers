@@ -1,7 +1,9 @@
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
-const CI_LOG_DIR = process.env.CI && process.env.GITHUB_WORKSPACE ? path.join(process.env.GITHUB_WORKSPACE, "logs") : null;
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+const CI_LOG_DIR = process.env.CI && process.env.GITHUB_WORKSPACE
+    ? path.join(process.env.GITHUB_WORKSPACE, 'logs')
+    : null;
 export function getTestTempDir() {
     const dir = CI_LOG_DIR ?? os.tmpdir();
     if (!fs.existsSync(dir)) {

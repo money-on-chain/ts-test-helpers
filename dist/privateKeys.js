@@ -1,6 +1,6 @@
-import { bytesToHex } from "viem";
-import { mnemonicToAccount } from "viem/accounts";
-export const seedPhrase = "test test test test test test test test test test test junk";
+import { bytesToHex } from 'viem';
+import { mnemonicToAccount } from 'viem/accounts';
+export const seedPhrase = 'test test test test test test test test test test test junk';
 export const BACKGROUND_SERVICE_ACCOUNT_INDEX = 1;
 /**
  * Hardhat's default accounts are derived from the standard test mnemonic.
