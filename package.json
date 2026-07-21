@@ -1,6 +1,6 @@
 {
     "name": "ts-test-helpers",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "private": true,
     "description": "Internal test helper package for Money On Chain repos",
     "type": "module",
@@ -26,7 +26,7 @@
     "scripts": {
         "clean": "hardhat clean && rm -rf dist artifacts cache",
         "compile": "hardhat compile",
-        "build": "pnpm exec tsc -p tsconfig.json",
+        "build:local": "pnpm exec tsc -p tsconfig.json",
         "check": "pnpm exec tsc --noEmit -p tsconfig.json",
         "format": "pnpm exec prettier . --write",
         "format:check": "pnpm exec prettier . --check",
@@ -34,7 +34,7 @@
         "lint:fix": "pnpm exec eslint . --fix --max-warnings 0",
         "quality": "pnpm format:check && pnpm lint && pnpm check",
         "precommit": "lint-staged && pnpm check",
-        "prepare": "husky",
+        "hooks:install": "husky",
         "test": "pnpm clean && pnpm compile && pnpm check && node --import tsx/esm --test \"test/**/*.test.ts\""
     },
     "lint-staged": {
@@ -46,15 +46,12 @@
         ]
     },
     "dependencies": {
-        "viem": "2.53.1",
-        "hardhat": "3.9.0",
-        "@nomicfoundation/hardhat-toolbox-viem": "5.0.7"
+        "viem": "2.53.1"
     },
     "devDependencies": {
         "@eslint/js": "^9.0.0",
+        "@nomicfoundation/hardhat-toolbox-viem": "5.0.7",
         "@openzeppelin/contracts": "4.9.3",
-        "@openzeppelin/contracts-ethereum-package": "3.0.0",
-        "@openzeppelin/upgrades": "2.8.0",
         "@types/node": "^26.0.1",
         "eslint": "^9.0.0",
         "eslint-config-prettier": "^10.0.0",
@@ -68,5 +65,15 @@
         "typechain": "^8.3.2",
         "typescript": "6.0.3",
         "typescript-eslint": "^8.0.0"
+    },
+    "packageManager": "pnpm@11.15.1+sha512.81350b07e53c9538a02f1f2303b4290fa2d7be04e56e2a970c4cc4b417dc761de196edabd49d55c7dc9580db81007c44143e4e3d7e462b3000d23c255122d065",
+    "peerDependencies": {
+        "@nomicfoundation/hardhat-toolbox-viem": "5.0.7",
+        "hardhat": "3.9.0"
+    },
+    "peerDependenciesMeta": {
+        "@nomicfoundation/hardhat-toolbox-viem": {
+            "optional": true
+        }
     }
 }
