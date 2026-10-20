@@ -1,6 +1,6 @@
 {
     "name": "ts-test-helpers",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "private": true,
     "description": "Internal test helper package for Money On Chain repos",
     "type": "module",

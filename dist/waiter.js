@@ -1,3 +1,4 @@
+import { createInterface } from 'node:readline/promises';
 import { getEvents, getTransfers } from './events.js';
 export async function waitFor(name, predicate, retries = 720, delayMs = 1000) {
     process.stdout.write(name);
@@ -13,19 +14,17 @@ export async function waitFor(name, predicate, retries = 720, delayMs = 1000) {
     console.log('failed!');
     throw new Error(`waitFor(${name}) timed out after ${retries} attempts`);
 }
-export function waitForEnter(msg = 'Press Enter to continue...') {
-    if (process.env.CI) {
-        return Promise.resolve();
+// Automated runs opt out explicitly; a process without a terminal cannot pause.
+export async function waitForEnter(msg = 'Press Enter to continue...') {
+    if (process.env.NON_INTERACTIVE === 'true' || !process.stdin.isTTY)
+        return;
+    const terminal = createInterface({ input: process.stdin, output: process.stdout });
+    try {
+        await terminal.question(msg);
     }
-    return new Promise((resolve) => {
-        process.stdin.resume();
-        process.stdin.setEncoding('utf8');
-        console.log(msg);
-        process.stdin.once('data', () => {
-            process.stdin.pause();
-            resolve();
-        });
-    });
+    finally {
+        terminal.close();
+    }
 }
 export async function waitForEvent(name, viem, source, eventName, eventArgs, txHash, fromBlock = 0n, toBlock) {
     return await waitFor(name, async () => {

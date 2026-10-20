@@ -1,3 +1,4 @@
+import { createInterface } from 'node:readline/promises';
 import type { Address, Hex } from 'viem';
 import { getEvents, getTransfers } from './events.js';
 import type { EventArgsOf, EventNameOf, EventsOf, EventSource, Viem } from './types.js';
@@ -22,22 +23,15 @@ export async function waitFor<T>(
     throw new Error(`waitFor(${name}) timed out after ${retries} attempts`);
 }
 
-export function waitForEnter(msg: string = 'Press Enter to continue...'): Promise<void> {
-    if (process.env.CI) {
-        return Promise.resolve();
+// Automated runs opt out explicitly; a process without a terminal cannot pause.
+export async function waitForEnter(msg: string = 'Press Enter to continue...'): Promise<void> {
+    if (process.env.NON_INTERACTIVE === 'true' || !process.stdin.isTTY) return;
+    const terminal = createInterface({ input: process.stdin, output: process.stdout });
+    try {
+        await terminal.question(msg);
+    } finally {
+        terminal.close();
     }
-
-    return new Promise((resolve) => {
-        process.stdin.resume();
-        process.stdin.setEncoding('utf8');
-
-        console.log(msg);
-
-        process.stdin.once('data', () => {
-            process.stdin.pause();
-            resolve();
-        });
-    });
 }
 
 export async function waitForEvent<

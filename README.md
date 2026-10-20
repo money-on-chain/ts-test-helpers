@@ -59,3 +59,14 @@ pnpm build
 ```
 
 This emits the compiled library files and declarations to `dist/`. Commit the generated output when updating the package.
+
+## Logs and interactive inspection
+
+Set `TEST_LOG_DIR` to the directory where test logs, screenshots, and traces
+should be written. `getTestTempDir()` creates it as needed; without that setting,
+it uses the operating system temporary directory. Logging does not depend on
+`CI` or `GITHUB_WORKSPACE`.
+
+`waitForEnter()` pauses only when stdin is a terminal and `NON_INTERACTIVE` is
+not `true`. Set `NON_INTERACTIVE=true` for unattended runs. `CI` does not control
+inspection prompts. Each prompt closes its readline interface before returning.
